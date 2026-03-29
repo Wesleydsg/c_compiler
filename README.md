@@ -1,2 +1,2 @@
-# py_compiler
-Compilador de C feito em Python.
+# c_compiler
+Compilador de C feito em C.
