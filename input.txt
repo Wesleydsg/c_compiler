@@ -1,5 +1,14 @@
 int main(){
-    int x = 0;
+    // Sim sim sim
+    /* BOMBA @
+    PEDRA
+    */
+    int x = 0   ;
+    @@@
+    int y = dsfdg;
+    int b = 2.12
+    char J = 'b';
+    x + 2;
     printf("10\n");
     return 0;
 }
