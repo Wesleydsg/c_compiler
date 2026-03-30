@@ -11,9 +11,9 @@ static int cur_column;
 static const char *reserved_words[] = {
     "auto", "break", "case", "char", "const", "continue", "default",
     "do", "double", "else", "enum", "extern", "float", "for", "goto",
-    "if", "inline", "int", "long", "register", "restrict", "return",
+    "if", "int", "long", "register", "restrict", "return",
     "short", "signed", "sizeof", "static", "struct", "switch", "typedef",
-    "union", "unsigned", "void", "volatile", "while",
+    "union", "unsigned", "void", "while",
     NULL // To finish is_reserved loop
 };
 
@@ -31,15 +31,15 @@ typedef struct{
 } Rule;
 
 static const Rule rules[] = {
-    { TOKEN_COMMENT,             "^/\\*([^*]|\\*+[^*/])*\\*+/"        },
-    { TOKEN_COMMENT,             "^//[^\n]*"                           },
-    { TOKEN_STRING,              "^\"([^\"\\\\]|\\\\.)*\""             },
-    { TOKEN_CHAR,                "^'([^'\\\\]|\\\\.)*'"                },
-    { TOKEN_NUMBER,              "^[0-9]+\\.[0-9]+|^[0-9]+"           },
-    { TOKEN_IDENTIFIER,          "^[a-zA-Z_][a-zA-Z0-9_]*"            },
-    { TOKEN_ARITHMETIC_OPERATOR, "^(\\+\\+|--|\\+|-|\\*|/|%)"         },
-    { TOKEN_LOGIC_OPERATOR,      "^(&&|\\|\\||!=|==|<=|>=|=|!|<|>)"   },
-    { TOKEN_SEPARATOR,           "^(\\(|\\)|\\{|\\}|\\[|\\]|;|,|\\.)" },
+    {TOKEN_COMMENT,             "^/\\*([^*]|\\*+[^*/])*\\*+/"        },
+    {TOKEN_COMMENT,             "^//[^\n]*"                          },
+    {TOKEN_STRING,              "^\"([^\"\\\\]|\\\\.)*\""            },
+    {TOKEN_CHAR,                "^'([^'\\\\]|\\\\.)*'"               },
+    {TOKEN_NUMBER,              "^[0-9]+\\.[0-9]+|^[0-9]+"           },
+    {TOKEN_IDENTIFIER,          "^[a-zA-Z_][a-zA-Z0-9_]*"            },
+    {TOKEN_ARITHMETIC_OPERATOR, "^(\\+\\+|--|\\+|-|\\*|/|%)"         },
+    {TOKEN_LOGIC_OPERATOR,      "^(&&|\\|\\||!=|==|<=|>=|=|!|<|>)"   },
+    {TOKEN_SEPARATOR,           "^(\\(|\\)|\\{|\\}|\\[|\\]|;|,|\\.)" },
 };
 
 #define NUM_RULES (sizeof(rules) / sizeof(rules[0]))
@@ -82,13 +82,9 @@ Token lexer_next_token(void){
             }
             if(regexec(&re, cursor, 1, &match, 0) == 0 && match.rm_so == 0){
                 int len = (int)match.rm_eo;
-
-                if(len >= (int)sizeof(tok.value))
-                    len = (int)sizeof(tok.value) - 1;
-
                 strncpy(tok.value, cursor, len);
                 tok.value[len] = '\0';
-                tok.type = rules[i].type;
+                tok.type = rules[i].type; // Token type from rule
                 tok.line = cur_line;
                 tok.column = cur_column;
 
