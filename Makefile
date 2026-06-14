@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -g
 TARGET = lexer
-SRCS = lexer.c main.c
+SRCS = lexer.c parser.c main.c
 INPUT = input.txt
 
 $(TARGET): $(SRCS)

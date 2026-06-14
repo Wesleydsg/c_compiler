@@ -12,6 +12,7 @@ typedef enum{
     TOKEN_SEPARATOR,
     TOKEN_COMMENT,
     TOKEN_UNKNOWN,
+    TOKEN_ERROR,
     TOKEN_EOF,
 } TokenType;
 

@@ -9,12 +9,12 @@ static int cur_line;
 static int cur_column;
 
 static const char *reserved_words[] = {
-    "auto", "break", "case", "char", "const", "continue", "default",
-    "do", "double", "else", "enum", "extern", "float", "for", "goto",
-    "if", "int", "long", "register", "restrict", "return",
-    "short", "signed", "sizeof", "static", "struct", "switch", "typedef",
-    "union", "unsigned", "void", "while",
-    NULL // To finish is_reserved loop
+    "break", "char", "continue",
+    "else", "float", "for",
+    "if", "int", "long", "return",
+    "short", "struct", "typedef",
+    "unsigned", "void", "while",
+    NULL
 };
 
 static int is_reserved(const char *word){
@@ -72,7 +72,6 @@ Token lexer_next_token(void){
             continue;
         }
         int matched = 0;
-        // Try every rule
         for(size_t i = 0; i < NUM_RULES; i++){
             regex_t re;
             regmatch_t match;
@@ -84,15 +83,34 @@ Token lexer_next_token(void){
                 int len = (int)match.rm_eo;
                 strncpy(tok.value, cursor, len);
                 tok.value[len] = '\0';
-                tok.type = rules[i].type; // Token type from rule
+                tok.type = rules[i].type;
                 tok.line = cur_line;
                 tok.column = cur_column;
 
-                // Identify reserved words
                 if(tok.type == TOKEN_IDENTIFIER && is_reserved(tok.value))
                     tok.type = TOKEN_RESERVED_WORD;
 
-                // Update line/column based on consumed content
+                if(tok.type == TOKEN_NUMBER){
+                    const char *after = cursor + len;
+                    if(*after == '.' || (*after >= '0' && *after <= '9')){
+                        cursor += len;
+                        cur_column += len;
+                        int blen = (int)strlen(tok.value);
+                        while(*cursor != '\0' && *cursor != ' ' && *cursor != '\n' &&
+                              *cursor != '\t' && *cursor != ';' && *cursor != ')' &&
+                              *cursor != ',' && blen < 254){
+                            tok.value[blen++] = *cursor;
+                            cursor++; cur_column++;
+                        }
+                        tok.value[blen] = '\0';
+                        tok.type = TOKEN_ERROR;
+                        fprintf(stderr, "[ERRO LÉXICO] Linha %d, Coluna %d: numero malformado '%s'\n",
+                                tok.line, tok.column, tok.value);
+                        regfree(&re);
+                        return tok;
+                    }
+                }
+
                 for(int j = 0; j < len; j++){
                     if(tok.value[j] == '\n'){ cur_line++; cur_column = 1; }
                     else cur_column++;
@@ -101,14 +119,41 @@ Token lexer_next_token(void){
                 matched = 1;
                 regfree(&re);
 
-                // Commentaries are skiped
                 if(tok.type == TOKEN_COMMENT) break;
                 return tok;
             }
             regfree(&re);
         }
         if(matched) continue;
-        // No rules matched
+
+        if(*cursor == '"'){
+            tok.type   = TOKEN_ERROR;
+            tok.line   = cur_line;
+            tok.column = cur_column;
+            cursor++;
+            while(*cursor != '\0' && *cursor != '\n' && *cursor != '"'){
+                cursor++; cur_column++;
+            }
+            if(*cursor == '"') cursor++;
+            strncpy(tok.value, "string nao fechada", sizeof(tok.value) - 1);
+            fprintf(stderr, "[ERRO LÉXICO] Linha %d, Coluna %d: string nao fechada\n",
+                    tok.line, tok.column);
+            cur_column++;
+            return tok;
+        }
+
+        if(*cursor == '@' || *cursor == '$' || *cursor == '`' || *cursor == '?'){
+            tok.type      = TOKEN_ERROR;
+            tok.line      = cur_line;
+            tok.column    = cur_column;
+            tok.value[0]  = *cursor;
+            tok.value[1]  = '\0';
+            fprintf(stderr, "[ERRO LÉXICO] Linha %d, Coluna %d: caractere invalido '%c'\n",
+                    cur_line, cur_column, *cursor);
+            cursor++; cur_column++;
+            return tok;
+        }
+
         tok.type = TOKEN_UNKNOWN;
         tok.value[0] = *cursor;
         tok.value[1] = '\0';
@@ -119,7 +164,6 @@ Token lexer_next_token(void){
         return tok;
     }
 
-    // EOF
     tok.type = TOKEN_EOF;
     tok.value[0] = '\0';
     tok.line = cur_line;
@@ -139,6 +183,7 @@ const char *token_type_name(TokenType type){
         case TOKEN_SEPARATOR:           return "SEPARATOR";
         case TOKEN_COMMENT:             return "COMMENT";
         case TOKEN_UNKNOWN:             return "UNKNOWN";
+        case TOKEN_ERROR:               return "ERROR";
         case TOKEN_EOF:                 return "EOF";
         default:                        return "???";
     }
