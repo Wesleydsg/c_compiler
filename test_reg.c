@@ -2,13 +2,13 @@ int main(){
     int x = 3;
     x = x + x;
     int y;
-    if (x < 10){
+    if (x > 0){
         int y;
         y = 4;
     }
     int w;
     while (y > 0){
-        w = y * 2 + 1;
+        w = 1 + 2 * y;
         y = y - 1;
     }
     return 0;
